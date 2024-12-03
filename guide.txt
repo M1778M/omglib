@@ -1,0 +1,34 @@
+# Custom Vosk Models
+In [1]: from omglib.ai import map,variables
+
+In [2]: variables.VoskModels.AddVoskModel('massive','fa','xxx')
+Out[2]: True
+
+In [3]: model=variables.VoskModels.GetCustomModels('fa')[0]
+
+In [4]: model['link'] = variables.VoskModels.GetSmallestModel('fa')['link']
+
+In [5]: model
+Out[5]:
+{'name': 'massive',
+ 'link': 'https://alphacephei.com/vosk/models/vosk-model-small-fa-0.5.zip'}
+
+In [6]: v=map.Vosk('fa','massive')
+
+In [7]: v.set_model(model)
+
+In [8]: v.init()
+
+
+# Suppored Vosk Models
+In [1]: from omglib.ai import map
+
+In [2]: v=map.Vosk(map.Languages.French,map.VoskModelSize.Small)
+
+In [3]: v.init()
+
+# Custom model path
+In [1]: from omglib.ai import map,variables
+
+In [2]: variables.VMM.models_path = r"D:\MyModelsPath\"
+
