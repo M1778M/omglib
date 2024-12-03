@@ -1,0 +1,7 @@
+openai
+vosk
+SpeechRecognition
+pyaudio
+pydub
+openai-whisper
+pySmartDL
