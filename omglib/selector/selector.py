@@ -16,21 +16,22 @@ class Selector:
         return
 
 class SelectKey:
-    def __init__(self,keyname:str=None):
-        if keyname == None:
-            self.keyname=id(self)
+    def __init__(self,name:str=None):
+        if name == None:
+            self.name=id(self)
         else:
-            self.keyname = keyname
+            self.name = name
     def __call__(self):
-        return self.keyname
+        return self.name
     def __repr__(self):
-        return f"<SelectKey name={self.keyname}>"
+        return f"<SelectKey name={self.name}>"
 
 class DictSelector(Selector):
     _initial_config = {}
     def __init__(self):
         super().__init__("DictSelector")
         self._first_run(DictSelector._initial_config)
+        self._recognize_by = 'name'
     def load_from_dict(self,dict_:dict):
         self._select_options = dict_
         return self
@@ -64,10 +65,13 @@ class DictSelector(Selector):
     def select(self,selection_key:SelectKey):
         if selection_key == "*" and perfectdict.nhas_key(self._select_options,selection_key):
             return self._select_options
-        if perfectdict.nhas_key(self._select_options,selection_key):
+        if perfectdict.nhas_key(self._select_options,selection_key) and not perfectdict.wkey_has_prop(self._select_options,self._recognize_by,selection_key):
             raise SelectKeyDoesntExists(f"Key '{selection_key}' doesn't exist in the DictSelector.")
+        if perfectdict.has_key(self._select_options,selection_key):
+            return self._select_options[selection_key]
+        if perfectdict.wkey_has_prop(self._select_options,self._recognize_by,selection_key):
+            return self._select_options[perfectdict.gkey_has_prop(self._select_options,self._recognize_by,selection_key)]
         return self._select_options[selection_key]
-
     def __call__(self,selection_key:SelectKey=None,selection_value:any=None):
         if selection_key == None and selection_value == None:
             return self
@@ -86,4 +90,5 @@ class DictSelector(Selector):
     def __lt__(self,item:tuple):
         if type(item) is not tuple:return self.__call__(item)
         return self.__call__(*item)
-    
+    def __getitem__(self,item:SelectKey):
+        return self.__call__(item)

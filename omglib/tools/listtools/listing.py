@@ -1,8 +1,4 @@
-from . import workspace
-
-
-
-
+class workspace:...
 class ListTools():
     def __init__(self,list):
         self._list = list
@@ -26,7 +22,16 @@ class ListTools():
         return GAItem_out()
 
 
-
+def get_only_item(ls:list):
+    for i in ls:
+        if i != None:
+            return i
+    return None
+def aget_only_item(ls:list):
+    for i in ls:
+        if i != None and i != False:
+            return i
+    return None
 
 def ToString(ls:list)->str:
     out = ''
