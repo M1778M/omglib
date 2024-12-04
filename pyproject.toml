@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "omglib"
+version="0.1.21"
+authors = [
+    {name = "M1778", email = "m1778.pc@gmail.com"},
+]
+maintainers = [
+	{name = "M1778", email="m1778.pc@gmail.com"},
+]
+description = "OMEGAPy Python Toolkit all projects need"
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = ["omg","omglib","M1778","OMEGAPy","omegapy","omglibrary"]
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software+Development :: Libraries :: Python+Modules",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+dependencies = [
+	"openai~=1.52.2",
+	"vosk",
+	"SpeechRecognition",
+	"pyaudio>0.2.13",
+	"pydub",
+	"openai-whisper",
+	"pySmartDL==1.3.4",
+]
+[tool.setuptools.packages.find]
+where=["."]
+include=["omglib"]
+[project.urls]
+Documentation = "https://pypi.org/project/omglib/"
+Repository = "https://github.com/M1778M/omglib"
+Issues = "https://github.com/M1778M/omglib/issues"
+
