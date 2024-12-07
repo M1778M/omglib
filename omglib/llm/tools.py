@@ -17,9 +17,15 @@ def init_inuse_tools_import():
     import win32ui
     import windowsapps
     import winapps
+    import webbrowser
+    import subprocess
+    import cython
     m.win32ui = win32ui
     m.windowsapps = windowsapps
     m.winapps = winapps
+    m.webbrowser=webbrowser
+    m.subprocess=subprocess
+    m.cython = cython
 #-----------------------------------------------------------------
 
 
@@ -37,6 +43,8 @@ class XConfig:
     def add_search_web():
         ALL_AVAILABLE_TOOLS.append(gen_func("search_web",required=["query"],query=xtype(str,"the query for web search example: 'Top premiere leagues'"),search_engine=xtype(str,"The search engine to use for search example: 'google'",enum=['google','bing']),country_code=xtype(str,"The country code for regional search default:'US'"))) # search_web(query:str,search_engine:str='google',country_code:str="US")
         return True
+    def add_tool(generated_func:dict):
+        ALL_AVAILABLE_TOOLS.append(generated_func)
 
 def OpenApp(appname:str)->bool:
     try:
@@ -88,6 +96,34 @@ def MessageBox(message:str,title:str,style:int=0)->dict:
     else:
         return {"MessageBoxStatus":"Suspended","MessageBoxReturnCode":_,"MessageBoxReturnCode_Translation":"UNKNOWN"}
 
+def OpenUrl(url:str): 
+    m.webbrowser.open(url) # simply opens a url in browser
+    return {
+        "OpenUrlStatus":"Successful",
+        "UrlOpened":url
+    }
+def OpenPath(path:str):
+    # simply opens a path in windows explorer
+    try:
+        _=m.subprocess.Popen(["explorer.exe",convert_path(path)])
+        return {
+        "OpenPathStatus":"Successful",
+        "Args":_.args
+    }
+    except Exception as e:
+        return {
+            "OpenPathStatus":"Failed",
+            "PyError_Message":str(e)
+        }
+
+def cython_inline(inline_text:str):
+    try:
+        out=m.cython.inline(inline_text)
+        return {"cython_inline_RunStatus":"Successful","CythonInlineOutput":out}
+    except Exception as e: 
+        return {"cython_inline_RunStatus":"Failed","CythonInlineErrorMessage":str(e)}
+
+# ______________________________________________________________________________________________________________
 def run_py(python_code:str):
     run_status = "Successful"
     error_message = "<No Error>"
@@ -223,6 +259,8 @@ def gen_func_response(tool_call_id:str,func_name:str,func_output:json): # out.ch
         "content":func_output
     }
 
+
+
 ALL_AVAILABLE_TOOLS = [
     gen_func("run_py","Runs the given python code using 'exec' function",python_code=xtype(str,"The python code to run"))  ,
     gen_func("get_weather","Returns the current weather of input location",required=['location'],location=xtype(str,"the location to get the weather for, examples : 'Tehran','New York'"),unit=xtype(str,"The unit of temperature example: celcius",enum=['celcius','fahrenheit'])),
@@ -230,8 +268,13 @@ ALL_AVAILABLE_TOOLS = [
     gen_func("OpenApp","Opens an application by searching the given name example: Notepad",appname=xtype(str,"The name of the application you want to open")) ,
     gen_func("ListInstalledAppsName","Returns a list of all applications installed on system"),
     gen_func("UninstallApp","Ask user for verification before uninstalling the given app",appname=xtype(str,"The name of the application you want to uninstall example:Pycharm")),
+    gen_func("OpenUrl","simply opens a url in browser using webbrowser library",url=xtype(str,"the url that you want to open in browser")),
+    gen_func("convert_path","Converts linux path to windows path, also used for using linux path",path=xtype(str,"the path you want to convert to supported path")),
+    gen_func("OpenPath","simply opens a path in windows explorer, code:`explorer.exe {path}`",path=xtype(str,"The path to open in windows explorer")),
+    gen_func("cython_inline","A function that will get an argument as input for cython.inline function inline compiler.",inline_text=xtype(str,"The inline string to be compiled and executed with cython.inline function.")),
     
 ]
 
 def call_func(func_name:str,**func_args):
     return globals()[func_name](**func_args)
+
