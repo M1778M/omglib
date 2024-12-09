@@ -6,6 +6,7 @@ import python_weather
 import asyncio
 import serpapi
 from pathlib import Path
+import subprocess
 
 from ..tools.dicttools import perfectdict
 
@@ -119,7 +120,7 @@ def OpenPath(path:str):
 def cython_inline(inline_text:str):
     try:
         out=m.cython.inline(inline_text)
-        return {"cython_inline_RunStatus":"Successful","CythonInlineOutput":out}
+        return {"cython_inline_RunStatus":"Successful","CythonInlineOutput":str(out)}
     except Exception as e: 
         return {"cython_inline_RunStatus":"Failed","CythonInlineErrorMessage":str(e)}
 
@@ -133,6 +134,11 @@ def run_py(python_code:str):
         run_status = "Failed"
         error_message=e
     return {"run_status":run_status,"error_message":error_message}
+
+def run_cmd(cmd_code:str):
+    _=subprocess.getstatusoutput(cmd_code)
+    run_status = "Successful" if _[0] == 0 else "Failed" 
+    return {"run_status":run_status,"output":_[1]}
 
 async def _get_weather(location:str,unit:str='celcius'):
     cli=python_weather.Client(unit=python_weather.constants.METRIC if unit == "celcius" else python_weather.constants.IMPERIAL)
@@ -271,7 +277,8 @@ ALL_AVAILABLE_TOOLS = [
     gen_func("OpenUrl","simply opens a url in browser using webbrowser library",url=xtype(str,"the url that you want to open in browser")),
     gen_func("convert_path","Converts linux path to windows path, also used for using linux path",path=xtype(str,"the path you want to convert to supported path")),
     gen_func("OpenPath","simply opens a path in windows explorer, code:`explorer.exe {path}`",path=xtype(str,"The path to open in windows explorer")),
-    gen_func("cython_inline","A function that will get an argument as input for cython.inline function inline compiler.",inline_text=xtype(str,"The inline string to be compiled and executed with cython.inline function.")),
+    gen_func("cython_inline","A function that will get an argument as input for cython.inline function inline compiler and returns a output",inline_text=xtype(str,"The inline string to be compiled and executed with cython.inline function.")),
+    gen_func("run_cmd","Runs the given command line/shell code using subprocess and returns output",cmd_code=xtype(str,"The cmd code to run")),
     
 ]
 
