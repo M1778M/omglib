@@ -4,6 +4,9 @@ import whisper as _whisper
 from vosk import Model as _vosk_model, KaldiRecognizer as _kaldi
 import pyaudio  
 from pydub import AudioSegment
+import requests
+import base64
+import numpy as np
 
 Microphone= _SR.Microphone
 _R = _SR.Recognizer()
@@ -67,6 +70,18 @@ class Sphinx:
     def recognize(self,audio_data):
         return _R.recognize_sphinx(audio_data,self.language)
 
+class CloudFlare:
+    def __init__(self,account_id:str,api_key:str):
+        self.accid=account_id
+        self.apikey = api_key
+        self.headers={"Authorization":f"Bearer {self.apikey}"}
+    def recognize_whisper(self,audio_data,language):
+        out=requests.post(f"https://api.cloudflare.com/client/v4/accounts/{self.accid}/ai/run/@cf/openai/whisper-large-v3-turbo",headers=self.headers,json={"audio":base64.b64encode(audio_data).decode(),"language":language})
+        out=out.json() if out.status_code == 200 else False
+        return False if not out else out['result']['text']
+    def recognize(self,audio_data):
+        out=requests.post(f"https://api.cloudflare.com/client/v4/accounts/{self.accid}/ai/run/@cf/openai/whisper",headers=self.headers,json={"audio":list(audio_data)})
+        return out
 
 def convert_raw_to_audio_data(raw_audio: bytes, sample_rate: int, sample_width: int = 2,channels:int=1) -> _SR.AudioData:
     """
