@@ -131,6 +131,87 @@ class VoskModels:
     def GetAvailableLangs():
         return perfectdict.get_keys(VoskModels.supported_languages)
 
+class _VMM_CUSTOM_DOWNLOAD_MANAGER:
+    def __init__(self,download_obj:_download,model:dict):
+        self.obj=download_obj
+        self.model = model
+    def status(self): #paused, downloading, finished
+        return self.obj.status
+    def start(self):
+        if self.status() == "paused":
+            self.obj.resume()
+            return True
+        elif self.status() == "downloading":
+            return True
+        elif self.status() == "ready":
+            self.obj.start()
+            return True
+        elif self.status() == "finished":
+            self.obj.retry()
+            self.start()
+            return True
+        else:
+            self.obj.start()
+            return True
+    def restart(self,auto_start=False):
+        self.obj.retry()
+        self.obj.start()
+        return True
+    def is_finished(self):
+        if self.obj.isFinished():
+            return True
+        return False
+    def finished_and_successful(self):
+        return self.obj.isFinished() and self.obj.isSuccessful()
+    def string_full_status(self):
+        return f"Downloading ({self.obj.get_speed(True)}) {self.obj.get_progress(30)} {self.obj.get_dl_size()}/{self.obj.get_final_filesize()} {self.obj.get_eta()}"
+    def after_download(self):
+        def _get_only_folder(folder_path:str):
+            folder = Path(folder_path)
+
+            # Ensure the path is a directory
+            if not folder.exists() or not folder.is_dir():
+                raise FileNotFoundError(f"The path '{folder_path}' does not exist or is not a directory.")
+            
+            # List all subdirectories in the given folder
+            subfolders = [f for f in folder.iterdir() if f.is_dir()]
+            
+            # Check if exactly one folder exists
+            if len(subfolders) == 0:
+                raise ValueError(f"No folders found in '{folder_path}'.")
+            elif len(subfolders) > 1:
+                raise ValueError(f"More than one folder found in '{folder_path}': {', '.join(str(f) for f in subfolders)}")
+            
+            # Return the single folder
+            return subfolders[0]
+        
+        downloaded = self.obj
+        prints=False
+        model=self.model
+        if downloaded.isFinished():
+            if prints:print("Model download completed. installing model...")
+            zfile=downloaded.get_dest()
+            _ZipFile(zfile).extractall(str(Path(VMM.models_path).joinpath(model['name'])))
+            Path(VMM.models_path).joinpath('temp').mkdir(exist_ok=True)
+            try:
+                orgn=_get_only_folder(Path(VMM.models_path).joinpath(model['name'])).name
+                _shutil.move(_get_only_folder(Path(VMM.models_path).joinpath(model['name'])),Path(VMM.models_path).joinpath("temp"))
+                temp_folder_name= _get_only_folder(Path(VMM.models_path).joinpath('temp')).name
+                _shutil.rmtree(Path(VMM.models_path).joinpath(model['name']))
+                _shutil.move(_get_only_folder(Path(VMM.models_path).joinpath('temp')),Path(VMM.models_path))
+                _shutil.rmtree(Path(VMM.models_path).joinpath('temp'))
+                Path(VMM.models_path).joinpath(temp_folder_name).rename(Path(VMM.models_path).joinpath(model['name']))
+            except Exception as err: raise SystemError(err)
+            if Path(VMM.models_path).joinpath(orgn):
+                if prints:print("Model successfully installed.")
+                return True
+            else:
+                raise SystemError("System failed to install the model.")
+        else:
+            if prints:print("Model download failed. quiting...")
+            return False
+    
+
 class VMM: # Vosk Model Manager
     models_path = str(Path().home().joinpath(".omgl/").joinpath("vosk_models/"))
     def change_models_path(newpath:str):
@@ -138,6 +219,55 @@ class VMM: # Vosk Model Manager
         return True
     def get_model_path(model:dict):
         return str(Path(VMM.models_path).joinpath(model['name']))
+    def smart_download(model:dict,prints:bool=False):
+        def _get_only_folder(folder_path:str):
+            folder = Path(folder_path)
+    
+            # Ensure the path is a directory
+            if not folder.exists() or not folder.is_dir():
+                raise FileNotFoundError(f"The path '{folder_path}' does not exist or is not a directory.")
+            
+            # List all subdirectories in the given folder
+            subfolders = [f for f in folder.iterdir() if f.is_dir()]
+            
+            # Check if exactly one folder exists
+            if len(subfolders) == 0:
+                raise ValueError(f"No folders found in '{folder_path}'.")
+            elif len(subfolders) > 1:
+                raise ValueError(f"More than one folder found in '{folder_path}': {', '.join(str(f) for f in subfolders)}")
+            
+            # Return the single folder
+            return subfolders[0]
+        
+        if prints:
+            print("Checking to see if model is already installed...")
+        if Path(VMM.models_path).joinpath(model['name']+'.zip').exists():
+            zfile=str(Path(VMM.models_path).joinpath(model['name']+'.zip'))
+            _ZipFile(zfile).extractall(str(Path(VMM.models_path).joinpath(model['name'])))
+            Path(VMM.models_path).joinpath('temp').mkdir(exist_ok=True)
+            try:
+                orgf=_get_only_folder(Path(VMM.models_path).joinpath(model['name']))
+                orgn=_get_only_folder(Path(VMM.models_path).joinpath(model['name'])).name
+                _shutil.move(_get_only_folder(Path(VMM.models_path).joinpath(model['name'])),Path(VMM.models_path).joinpath("temp"))
+                _shutil.rmtree(Path(VMM.models_path).joinpath(model['name']))
+                temp_folder_name= _get_only_folder(Path(VMM.models_path).joinpath('temp')).name
+                _shutil.move(_get_only_folder(Path(VMM.models_path).joinpath('temp')),Path(VMM.models_path))
+                _shutil.rmtree(Path(VMM.models_path).joinpath('temp'))
+                Path(VMM.models_path).joinpath(temp_folder_name).rename(Path(VMM.models_path).joinpath(model['name']))
+            except Exception as err: raise SystemError(err)
+            if Path(VMM.models_path).joinpath(orgn):
+                if prints:print("Model successfully installed.")
+                return True
+            else:
+                raise SystemError("System failed to install the model.")
+        if Path(VMM.models_path).joinpath(model['name']).exists():
+            return True
+        if prints:print("model is not installed, downloading model...")
+        dest=str(Path(VMM.models_path).joinpath(model['name']+'.zip'))
+
+        downloaded=_download(model['link'],dest,False)
+        return _VMM_CUSTOM_DOWNLOAD_MANAGER(downloaded,model)
+        
     def install_model(model:dict,prints=False):
         def _get_only_folder(folder_path:str):
             folder = Path(folder_path)
