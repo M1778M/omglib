@@ -52,7 +52,11 @@ def OpenApp(appname:str)->bool:
         m.windowsapps.open_app(appname) # Uses a library to search and open application
         return {"OpenApplicationStatus":"Successful","RequestedApplicationName":appname} # returns true if the application is found and launched 
     except:
-        return {"OpenApplicationStatus":"Failed/Probaby not found","RequestedApplicationName":appname} # returns false if the application is not found
+        try:
+            m.windowsapps.open_app(appname.lower())
+            return {"OpenApplicationStatus":"Successful","RequestedApplicationName":appname} # returns true if the application is found and launched 
+        except:
+            return {"OpenApplicationStatus":"Failed/Probaby not found","RequestedApplicationName":appname} # returns false if the application is not found
 
 def ListInstalledAppsName()->list:
     output=[] # the return variable
@@ -201,7 +205,7 @@ def search_web(query:str,search_engine:str='google',country_code:str="US"): # Se
 ALL_AVAILABLE_TOOLS = [
     gen_func("run_py","Runs the given python code using 'exec' function",python_code=xtype(str,"The python code to run"))  ,
     gen_func("get_weather","Returns the current weather of input location",required=['location'],location=xtype(str,"the location to get the weather for, examples : 'Tehran','New York'"),unit=xtype(str,"The unit of temperature example: celcius",enum=['celcius','fahrenheit'])),
-    gen_func("MessageBox","Shows a message box client-side to user using (pywin32.win32ui)",required=["message","title"],message=xtype(str,"The message shown in message box"),title=xtype(str,"The title shown for message box window"),style=xtype(int,"The style of the message box based on win32ui.MessageBox style policy range from 0 to 6. 0 being a basic message box with [ok] button and 1 being [ok,cancel] and so on...",enum=[0,1,2,3,4,5,6])),
+    gen_func("MessageBox","Shows a message box client-side to user using (pywin32.win32ui)",required=["message","title"],message=xtype(str,"The message shown in message box"),title=xtype(str,"The title shown for message box window"),style=xtype(int,"The style of the message box based on win32ui.MessageBox style policy range from 0 to 6. 0 being a basic message box with [ok] button and 1 being [ok,cancel] and so on...")),
     gen_func("OpenApp","Opens an application by searching the given name example: Notepad",appname=xtype(str,"The name of the application you want to open")) ,
     gen_func("ListInstalledAppsName","Returns a list of all applications installed on system"),
     gen_func("UninstallApp","Ask user for verification before uninstalling the given app",appname=xtype(str,"The name of the application you want to uninstall example:Pycharm")),
