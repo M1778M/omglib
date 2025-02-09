@@ -67,7 +67,10 @@ class MurfAI:
         response=requests.request("POST",self.url,headers=headers,data=payload)
         return response.text
     def speak(self,text:str,lang:str="en-US-natalie",rate:int=0,pitch:int=0,samplerate:int=48000,style:str="Promo"):
-        self.audioFile=json.loads(self.get_file(text,lang,rate,pitch,samplerate,style))['audioFile']
+        if lang == "en":
+            lang = "en-US-natalie"
+        load=json.loads(self.get_file(text,lang,rate,pitch,samplerate,style))
+        self.audioFile=load['audioFile']
         audioData = requests.get(self.audioFile).content
         self.last_audio = audioData
         return play_mp3_bytes(audioData)
