@@ -136,23 +136,10 @@ class _VMM_CUSTOM_DOWNLOAD_MANAGER:
         self.obj=download_obj
         self.model = model
     def status(self): #paused, downloading, finished
-        return self.obj.status
+        return self.obj.get_status()
     def start(self):
-        if self.status() == "paused":
-            self.obj.resume()
-            return True
-        elif self.status() == "downloading":
-            return True
-        elif self.status() == "ready":
-            self.obj.start()
-            return True
-        elif self.status() == "finished":
-            self.obj.retry()
-            self.start()
-            return True
-        else:
-            self.obj.start()
-            return True
+        self.obj.start(False)
+        return True
     def restart(self,auto_start=False):
         self.obj.retry()
         self.obj.start()
@@ -164,7 +151,11 @@ class _VMM_CUSTOM_DOWNLOAD_MANAGER:
     def finished_and_successful(self):
         return self.obj.isFinished() and self.obj.isSuccessful()
     def string_full_status(self):
-        return f"Downloading ({self.obj.get_speed(True)}) {self.obj.get_progress(30)} {self.obj.get_dl_size()}/{self.obj.get_final_filesize()} {self.obj.get_eta()}"
+        try:
+            return f"Downloading ({self.obj.get_speed(True)}) {self.obj.get_progress_bar(30)} {self.obj.get_dl_size(True)}/{self.obj.get_final_filesize(True)} {self.obj.get_eta(True)}"
+        except Exception as err:
+            print(f"ERROR: {err}")
+            return ""
     def after_download(self):
         def _get_only_folder(folder_path:str):
             folder = Path(folder_path)
