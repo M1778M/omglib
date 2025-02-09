@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 [project]
 name = "omglib"
-version="0.1.22"
+version="0.1.45"
 authors = [
     {name = "M1778", email = "m1778.pc@gmail.com"},
 ]
@@ -36,7 +36,7 @@ dependencies = [
 ]
 [tool.setuptools.packages.find]
 where=["."]
-include=["omglib"]
+include=["omglib*"]
 [project.urls]
 Documentation = "https://pypi.org/project/omglib/"
 Repository = "https://github.com/M1778M/omglib"
